@@ -1,0 +1,27 @@
+{
+  "name": "ada-blockchain",
+  "version": "1.0.0",
+  "description": "Blockchain implementation of BA",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "npm run test",
+    "git": "func() { git add . && git commit -m \"$1\" && git push origin HEAD; }; func",
+    "ropsten": "oz create --network ropsten Exchange --init initialize",
+    "ganache": "oz create --network ganache Exchange --init initialize"
+  },
+  "author": "Jude Dike",
+  "license": "ISC",
+  "devDependencies": {
+    "@openzeppelin/cli": "^2.6.0",
+    "@truffle/hdwallet-provider": "^1.0.30"
+  },
+  "dependencies": {
+    "@0x/contracts-utils": "^4.3.0",
+    "@openzeppelin/contracts-ethereum-package": "^2.4.0",
+    "@openzeppelin/gsn-provider": "^0.1.9",
+    "dotenv": "^8.2.0"
+  }
+}

@@ -1,0 +1,29 @@
+# Truffle
+build/
+
+# Node
+node_modules
+package-lock.json
+
+# Mac specific
+.DS_Store
+.vs
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn.lock
+# .env
+# Dockerfile
+
+# Externals
+external/
+
+# CircleCI
+.circleci
+
+# OpenZeppelin
+.openzeppelin
+
+.openzeppelin/.session
