@@ -1,6 +1,6 @@
 {
   "name": "ada-blockchain",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Blockchain implementation of BA",
   "main": "truffle-config.js",
   "directories": {
