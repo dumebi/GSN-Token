@@ -12,7 +12,6 @@
     "release:major": "env SEMANTIC=major npm run git",
     "release:minor": "env SEMANTIC=minor npm run git",
     "release:patch": "env SEMANTIC=patch npm run git",
-    "ropsten": "oz create --network ropsten ANO --init initialize --force",
     "ganache": "oz create --network ganache ANO --init initialize"
   },
   "author": "Jude Dike",
