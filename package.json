@@ -1,6 +1,6 @@
 {
   "name": "ada-blockchain",
-  "version": "1.0.2",
+  "version": "1.0.1",
   "description": "Blockchain implementation of BA",
   "main": "truffle-config.js",
   "directories": {
@@ -8,10 +8,11 @@
   },
   "scripts": {
     "test": "npm run test",
-    "git": "func() { git add . && git commit -m \"$1\" && npm version ${SEMANTIC:-patch} && git push origin HEAD && git push --tags; }; func",
+    "git": "func() { git add . && git commit -m \"$1\" && npm version ${SEMANTIC:-$2} && git push origin HEAD && git push --tags; }; func",
     "release:major": "func() { env SEMANTIC=major npm run git -- \"$1\" }; func",
     "release:minor": "func() { env SEMANTIC=minor npm run git -- \"$1\" }; func",
     "release:patch": "func() { env SEMANTIC=patch npm run git -- \"$1\" }; func",
+    "release": "npm version ${SEMANTIC:-patch} -m \"Release %s\" && git push origin HEAD && git push --tags",
     "ropsten": "oz create --network ropsten ANO --init initialize --force",
     "ganache": "oz create --network ganache ANO --init initialize"
   },
