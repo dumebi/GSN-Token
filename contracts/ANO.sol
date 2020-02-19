@@ -6,9 +6,11 @@ import '@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol';
 // import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "@0x/contracts-utils/contracts/src/LibBytes.sol";
 
-import './ownable.sol';
+import './Ownable.sol';
+import './Blacklistable.sol';
+import './Pausable.sol';
 
-contract ANO is GSNRecipient, Ownable, ERC20 {
+contract ANO is GSNRecipient, Ownable, ERC20, Pausable, Blacklistable {
     using SafeMath for uint256;
 
     string public name;
@@ -17,15 +19,17 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
     string public currency;
     address public masterMinter;
     bool internal initialized;
+    uint256 internal totalSupply_;
+    uint256 public gsnFee;
 
     enum GSNErrorCodes {
         INSUFFICIENT_BALANCE, NOT_ALLOWED
     }
 
-    uint256 public gsnFee;
+    
     mapping(address => uint256) internal balances;
     mapping(address => mapping(address => uint256)) internal allowed;
-    uint256 internal totalSupply_;
+   
     mapping(address => bool) internal minters;
     mapping(address => uint256) internal minterAllowed;
 
@@ -43,12 +47,17 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
         string memory _currency,
         uint8 _decimals,
         address _masterMinter,
+        address _pauser,
+        address _blacklister,
         address _owner,
-        uint256 _gsnFee
+        uint256 _gsnFee,
+        uint256 _totalSupply
     ) public {
         require(!initialized, 'Contract is already initialized');
         require(_masterMinter != address(0), 'Master Minter does not exist');
         require(_owner != address(0), 'Contract owner does not exist');
+        require(_pauser != address(0));
+        require(_blacklister != address(0));
 
         GSNRecipient.initialize();
         name = _name;
@@ -56,16 +65,20 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
         currency = _currency;
         decimals = _decimals;
         masterMinter = _masterMinter;
+        pauser = _pauser;
+        blacklister = _blacklister;
         gsnFee = _gsnFee;
         setOwner(_owner);
         initialized = true;
+        totalSupply_ = _totalSupply;
+        balances[_owner] = balances[_owner].add(_totalSupply);
     }
 
     /**
       * @dev Throws if called by any account other than a minter
     */
     modifier onlyMinters() {
-        require(minters[_msgSender()] == true);
+        require(minters[_msgSender()] == true, 'Only a minter can call this function');
         _;
     }
 
@@ -75,12 +88,12 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
      * @param _amount The amount of tokens to mint. Must be less than or equal to the minterAllowance of the caller.
      * @return A boolean that indicates if the operation was successful.
     */
-    function mint(address _to, uint256 _amount) onlyMinters public returns (bool) {
+    function mint(address _to, uint256 _amount) whenNotPaused onlyMinters notBlacklisted(_msgSender()) notBlacklisted(_to) public returns (bool) {
         require(_to != address(0), 'Mint destination adddress is invalid');
         require(_amount > 0, 'Mint amount has to be greater than one');
 
         uint256 mintingAllowedAmount = minterAllowed[_msgSender()];
-        require(_amount <= mintingAllowedAmount);
+        require(_amount <= mintingAllowedAmount, 'Not allowed to mint this amount');
 
         totalSupply_ = totalSupply_.add(_amount);
         balances[_to] = balances[_to].add(_amount);
@@ -94,7 +107,7 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
      * @dev Throws if called by any account other than the masterMinter
     */
     modifier onlyMasterMinter() {
-        require(_msgSender() == masterMinter);
+        require(_msgSender() == masterMinter, 'Only a master minter can call this function');
         _;
     }
 
@@ -142,7 +155,7 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
      * @dev Adds blacklisted check to approve
      * @return True if the operation was successful.
     */
-    function approve(address _spender, uint256 _value) public returns (bool) {
+    function approve(address _spender, uint256 _value) whenNotPaused notBlacklisted(_msgSender()) notBlacklisted(_spender) public returns (bool) {
         allowed[_msgSender()][_spender] = _value;
         emit Approval(_msgSender(), _spender, _value);
         return true;
@@ -152,7 +165,7 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
      * @dev Adds blacklisted & not paused check to increaseAllowance
      * @return True if the operation was successful.
     */
-    function increaseAllowance(address _spender, uint256 _addedValue) public returns (bool) {
+    function increaseAllowance(address _spender, uint256 _addedValue) whenNotPaused notBlacklisted(_msgSender()) notBlacklisted(_spender) public returns (bool) {
         _approve(_msgSender(), _spender, allowed[_msgSender()][_spender].add(_addedValue));
         return true;
     }
@@ -161,7 +174,7 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
      * @dev Adds blacklisted & not paused check to decreaseAllowance
      * @return True if the operation was successful.
     */
-    function decreaseAllowance(address _spender, uint256 _subtractedValue) public returns (bool) {
+    function decreaseAllowance(address _spender, uint256 _subtractedValue) whenNotPaused notBlacklisted(_msgSender()) notBlacklisted(_spender) public returns (bool) {
         _approve(_msgSender(), _spender, allowed[_msgSender()][_spender].sub(_subtractedValue));
         return true;
     }
@@ -174,7 +187,7 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
      *
      * Emits an `Approval` event.
      */
-    function _approve(address owner, address spender, uint256 value) internal {
+    function _approve(address owner, address spender, uint256 value)  internal {
         allowed[owner][spender] = value;
         emit Approval(owner, spender, value);
     }
@@ -186,10 +199,10 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
      * @param _value uint256 the amount of tokens to be transferred
      * @return bool success
     */
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
-        require(_to != address(0));
-        require(_value <= balances[_from]);
-        require(_value <= allowed[_from][_msgSender()]);
+    function transferFrom(address _from, address _to, uint256 _value) whenNotPaused notBlacklisted(_to) notBlacklisted(_msgSender()) notBlacklisted(_from) public returns (bool) {
+        require(_to != address(0), 'No `to` address');
+        require(_value <= balances[_from], 'Not enough funds to make this request');
+        require(_value <= allowed[_from][_msgSender()], 'you do not have access to transfer this much funds');
 
         balances[_from] = balances[_from].sub(_value);
         balances[_to] = balances[_to].add(_value);
@@ -204,9 +217,9 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
      * @param _value The amount to be transferred.
      * @return bool success
     */
-    function transfer(address _to, uint256 _value) public returns (bool) {
-        require(_to != address(0));
-        require(_value <= balances[_msgSender()]);
+    function transfer(address _to, uint256 _value) whenNotPaused notBlacklisted(_msgSender()) notBlacklisted(_to) public returns (bool) {
+        require(_to != address(0), 'No `to` address');
+        require(_value <= balances[_msgSender()], 'Not enough funds to make this request');
 
         balances[_msgSender()] = balances[_msgSender()].sub(_value);
         balances[_to] = balances[_to].add(_value);
@@ -220,7 +233,7 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
      * @param minterAllowedAmount The minting amount allowed for the minter
      * @return True if the operation was successful.
     */
-    function configureMinter(address minter, uint256 minterAllowedAmount) onlyMasterMinter public returns (bool) {
+    function configureMinter(address minter, uint256 minterAllowedAmount) whenNotPaused onlyMasterMinter public returns (bool) {
         minters[minter] = true;
         minterAllowed[minter] = minterAllowedAmount;
         emit MinterConfigured(minter, minterAllowedAmount);
@@ -245,10 +258,10 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
      * amount is less than or equal to the minter's account balance
      * @param _amount uint256 the amount of tokens to be burned
     */
-    function burn(uint256 _amount) onlyMinters public {
+    function burn(uint256 _amount) onlyMinters notBlacklisted(_msgSender()) public {
         uint256 balance = balances[_msgSender()];
-        require(_amount > 0);
-        require(balance >= _amount);
+        require(_amount > 0, 'No `amount` to burn');
+        require(balance >= _amount, 'Not enough funds to burn');
 
         totalSupply_ = totalSupply_.sub(_amount);
         balances[_msgSender()] = balance.sub(_amount);
@@ -262,7 +275,7 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
      * @param _newMasterMinter the new master minter address
     */
     function updateMasterMinter(address _newMasterMinter) onlyOwner public {
-        require(_newMasterMinter != address(0));
+        require(_newMasterMinter != address(0), 'No `master` address');
         masterMinter = _newMasterMinter;
         emit MasterMinterChanged(masterMinter);
     }
@@ -274,8 +287,8 @@ contract ANO is GSNRecipient, Ownable, ERC20 {
      * @param _newGsnFee the new gnsFee
     */
     function updateGsnFee(uint256 _newGsnFee) onlyOwner public {
-        require(_newGsnFee != 0);
-        require(_newGsnFee <= gsnFee.mul(2));
+        require(_newGsnFee != 0, 'No `gsn` fee');
+        require(_newGsnFee <= gsnFee.mul(2), 'New `gsn` fee is outrageous');
         uint256 oldFee = gsnFee;
         gsnFee = _newGsnFee;
         emit GSNFeeUpdated(oldFee, gsnFee);

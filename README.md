@@ -3,9 +3,7 @@ to run locally:
 
 Start up ganachecli in a seperate console
 
-run `oz create --network ganache Exchange --init initialize`
+run `oz create --network ganache ANO`
 
-go to BA-Backend folder
-
-copy instance address and replace `GANACHE_CONTRACT_ADDRESS` in `compose.env`
+copy instance address and replace `ROPSTEN_CONTRACT` in `compose.env`
 

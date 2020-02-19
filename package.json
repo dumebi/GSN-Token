@@ -9,8 +9,8 @@
   "scripts": {
     "test": "npm run test",
     "git": "func() { git add . && git commit -m \"$1\" && git push origin HEAD; }; func",
-    "ropsten": "oz create --network ropsten Exchange --init initialize",
-    "ganache": "oz create --network ganache Exchange --init initialize"
+    "ropsten": "oz create --network ropsten ANO --init initialize --force",
+    "ganache": "oz create --network ganache ANO --init initialize"
   },
   "author": "Jude Dike",
   "license": "ISC",
