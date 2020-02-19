@@ -11,8 +11,7 @@
     "git": "func() { git add . && git commit -m \"$1\" && npm version ${SEMANTIC:-patch} && git push origin HEAD && git push --tags; }; func",
     "release:major": "func() { env SEMANTIC=major npm run git -- \"$1\" }; func",
     "release:minor": "func() { env SEMANTIC=minor npm run git -- \"$1\" }; func",
-    "release:patch": "func() { env SEMANTIC=patch npm run git -- \"$1\" }; func",
-    "release": "npm version ${SEMANTIC:-patch} -m \"Release %s\" && git push origin HEAD && git push --tags",
+    "release:patch": "env SEMANTIC=patch npm run git",
     "ropsten": "oz create --network ropsten ANO --init initialize --force",
     "ganache": "oz create --network ganache ANO --init initialize"
   },
