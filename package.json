@@ -9,8 +9,8 @@
   "scripts": {
     "test": "npm run test",
     "git": "func() { git add . && git commit -m \"$1\" && npm version ${SEMANTIC:-patch} && git push origin HEAD && git push --tags; }; func",
-    "release:major": "func() { env SEMANTIC=major npm run git -- \"$1\" }; func",
-    "release:minor": "func() { env SEMANTIC=minor npm run git -- \"$1\" }; func",
+    "release:major": "env SEMANTIC=major npm run git",
+    "release:minor": "env SEMANTIC=minor npm run git",
     "release:patch": "env SEMANTIC=patch npm run git",
     "ropsten": "oz create --network ropsten ANO --init initialize --force",
     "ganache": "oz create --network ganache ANO --init initialize"
