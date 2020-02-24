@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npm run test",
+    "test": "bash script/test.sh",
     "git": "func() { git add . && git commit -m \"$1\" && npm version ${SEMANTIC:-patch} && git push origin HEAD && git push --tags; }; func",
     "release:major": "env SEMANTIC=major npm run git",
     "release:minor": "env SEMANTIC=minor npm run git",
@@ -24,7 +24,9 @@
   "dependencies": {
     "@0x/contracts-utils": "^4.3.0",
     "@openzeppelin/contracts-ethereum-package": "^2.4.0",
+    "@openzeppelin/gsn-helpers": "^0.2.3",
     "@openzeppelin/gsn-provider": "^0.1.9",
+    "@openzeppelin/test-helpers": "^0.5.4",
     "dotenv": "^8.2.0"
   }
 }

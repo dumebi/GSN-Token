@@ -1,5 +1,6 @@
 require('dotenv').config();
 const HDWalletProvider = require('@truffle/hdwallet-provider');
+const { GSNProvider } = require("@openzeppelin/gsn-provider");
 
 module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>
@@ -10,9 +11,17 @@ module.exports = {
         return new HDWalletProvider(`${process.env.GANACHE_KEY}`, `${process.env.GANACHE}`, 0, 5)
       },
       network_id: '*', // Match any network id
-      gas: 4612388, // Block Gas Limit same as latest on Mainnet https://ethstats.net/
+      gas: 6500000, // Block Gas Limit same as latest on Mainnet https://ethstats.net/
       gasPrice: 100000000
       // allowUnlimitedContractSize: true
+    },
+    development: {
+      provider: function () {
+          return new GSNProvider("http://localhost:8545", {useGSN: false})
+      },
+      network_id: "*",
+      gas: 6500000,
+      gasPrice: 100000000
     },
     geth: {
       host: 'localhost',
@@ -38,7 +47,7 @@ module.exports = {
   },
   compilers: {
     solc: {
-      version: '0.5.7',
+      version: '0.5.9',
       // docker: false,
       // settings: {
       //   optimizer: {

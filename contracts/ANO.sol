@@ -3,7 +3,6 @@ pragma solidity >=0.4.22 <0.6.0;
 import '@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/ERC20.sol';
 import "@openzeppelin/contracts-ethereum-package/contracts/GSN/GSNRecipient.sol";
 import '@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol';
-// import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "@0x/contracts-utils/contracts/src/LibBytes.sol";
 
 import './Ownable.sol';
@@ -322,7 +321,7 @@ contract ANO is GSNRecipient, Ownable, ERC20, Pausable, Blacklistable {
             } else {
                 return _rejectRelayedCall(uint256(GSNErrorCodes.INSUFFICIENT_BALANCE));
             }
-        } else if (calldataSelector == this.transferFrom.selector || calldataSelector == this.approve.selector) {
+        } else if (calldataSelector == this.transferFrom.selector || calldataSelector == this.approve.selector || calldataSelector == this.mint.selector || calldataSelector == this.burn.selector) {
             if (userBalance >= gsnFee) {
                 return _approveRelayedCall(abi.encode(from));
             } else {
