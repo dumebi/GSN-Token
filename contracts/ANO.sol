@@ -321,7 +321,9 @@ contract ANO is GSNRecipient, Ownable, ERC20, Pausable, Blacklistable {
             } else {
                 return _rejectRelayedCall(uint256(GSNErrorCodes.INSUFFICIENT_BALANCE));
             }
-        } else if (calldataSelector == this.transferFrom.selector || calldataSelector == this.approve.selector || calldataSelector == this.mint.selector || calldataSelector == this.burn.selector) {
+        } else if (calldataSelector == this.transferFrom.selector || calldataSelector == this.approve.selector || calldataSelector == this.mint.selector 
+                || calldataSelector == this.burn.selector || calldataSelector == this.configureMinter.selector || calldataSelector == this.removeMinter.selector 
+                || calldataSelector == this.updateMasterMinter.selector || calldataSelector == this.updateGsnFee.selector) {
             if (userBalance >= gsnFee) {
                 return _approveRelayedCall(abi.encode(from));
             } else {
