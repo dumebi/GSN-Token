@@ -36,7 +36,7 @@ async function deploy(options, accounts) {
   await push(options);
   await create(Object.assign({ contractAlias: 'ANO', methodName: 'initialize',
   methodArgs: [
-    "Kolokodess", "KK", "NGN", 18, accounts[0], accounts[0], accounts[0], accounts[0], 10, 50000000000
+    "ANO Token", "ANO", "NGN", 18, accounts[0], accounts[0], accounts[0], accounts[0], 10, 50000000000
   ] }, options));
 }
 
